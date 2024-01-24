@@ -1,14 +1,14 @@
+import argparse
 import requests
 from bs4 import BeautifulSoup
 import csv
 import sys
 
 def scrape_quotes(url):
-    # Make an HTTP request to the specified URL
-    response = requests.get(url)
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
 
-    # Check if the request was successful (status code 200)
-    if response.status_code == 200:
         # Parse the HTML content
         soup = BeautifulSoup(response.content, 'html.parser')
 
@@ -16,8 +16,8 @@ def scrape_quotes(url):
         quotes = [quote.text.strip() for quote in soup.select('.quote span.text')]
 
         return quotes
-    else:
-        print(f'Error: Unable to fetch content. Status Code: {response.status_code}')
+    except requests.exceptions.RequestException as e:
+        print(f'Error: Unable to fetch content. {e}')
         return None
 
 def save_to_csv(data, filename):
@@ -28,33 +28,28 @@ def save_to_csv(data, filename):
         writer.writerows(zip(data))
 
 def main():
-    # URL of the website to scrape (replace with your target website)
-    target_url = 'http://quotes.toscrape.com'
+    # Create an argparse parser
+    parser = argparse.ArgumentParser(description='Scrape quotes from a website and save to CSV.')
+    parser.add_argument('--url', help='URL of the website to scrape', default='http://quotes.toscrape.com')
+    parser.add_argument('command', help='Command to execute', choices=['scrape', 'save_to_csv'])
 
-    # Call the scrape_quotes function
-    quotes = scrape_quotes(target_url)
+    # Parse the command-line arguments
+    args = parser.parse_args()
 
-    if quotes:
-        # Print quotes to the terminal
-        print(f'Successfully scraped {len(quotes)} quotes:')
-        for quote in quotes:
-            print(quote)
-
-        # Save quotes to a CSV file
-        save_to_csv(quotes, 'quotes.csv')
+    if args.command == 'scrape':
+        # Call the main function to scrape and both print to terminal and save to CSV
+        quotes = scrape_quotes(args.url)
+        if quotes:
+            print(f'Successfully scraped {len(quotes)} quotes:')
+            for quote in quotes:
+                print(quote)
+    elif args.command == 'save_to_csv':
+        # Call the main function to get quotes and then save them to CSV
+        quotes_to_save = scrape_quotes(args.url)
+        if quotes_to_save:
+            save_to_csv(quotes_to_save, 'quotes.csv')
+    else:
+        print('Invalid command. Usage: python main_edit.py {scrape|save_to_csv}')
 
 if __name__ == "__main__":
-    # Check command-line arguments
-    if len(sys.argv) > 1:
-        if sys.argv[1] == 'scrape':
-            # Call the main function to scrape and both print to terminal and save to CSV
-            main()
-        elif sys.argv[1] == 'save_to_csv':
-            # Call the save_to_csv function
-            quotes_to_save = ['quote1', 'quote2']  # Replace with actual quotes to save
-            save_to_csv(quotes_to_save, 'quotes.csv')
-        else:
-            print('Invalid argument. Usage: python myscript.py [scrape|save_to_csv]')
-    else:
-        # Call the main function if no command-line arguments are provided
-        main()
+    main()
