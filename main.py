@@ -48,7 +48,7 @@ def main():
         if quotes_to_save:
             save_to_csv(quotes_to_save, 'quotes.csv')
     else:
-        print('Invalid command. Usage: python main_edit.py {scrape|save_to_csv}')
+        print('Invalid command. Usage: python main.py {scrape|save_to_csv}')
 
 if __name__ == "__main__":
     main()
