@@ -2,7 +2,6 @@ import argparse
 import requests
 from bs4 import BeautifulSoup
 import csv
-import sys
 
 def scrape_quotes(url):
     try:
